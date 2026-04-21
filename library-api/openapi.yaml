@@ -1,0 +1,311 @@
+openapi: "3.1.0"
+info:
+  title: Library API
+  description: A contract-first REST API for managing books in a library system.
+  version: "1.0.0"
+  contact:
+    name: Leslie
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Books
+    description: Operations for managing library books
+  - name: Statistics
+    description: Operations for viewing library statistics
+
+paths:
+  /:
+    get:
+      tags:
+        - Books
+      summary: List all books
+      description: Returns all books in the library collection.
+      operationId: BookService_list
+      responses:
+        "200":
+          description: A list of books.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - Books
+      summary: Create a book
+      description: Creates a new book in the library collection.
+      operationId: BookService_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreate"
+      responses:
+        "201":
+          description: Book created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /{id}:
+    get:
+      tags:
+        - Books
+      summary: Get a book by ID
+      description: Returns a single book by its unique ID.
+      operationId: BookService_getById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the book.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The requested book.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Book not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      tags:
+        - Books
+      summary: Update a book
+      description: Partially updates an existing book by ID.
+      operationId: BookService_update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the book.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookUpdate"
+      responses:
+        "200":
+          description: Book updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Book not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Books
+      summary: Delete a book
+      description: Deletes a book from the library collection by ID.
+      operationId: BookService_delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the book.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Book deleted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Book not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats:
+    get:
+      tags:
+        - Statistics
+      summary: Get library statistics
+      description: Returns aggregate statistics about the books in the library.
+      operationId: BookService_stats
+      responses:
+        "200":
+          description: Library statistics returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookStats"
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Book:
+      type: object
+      description: A book in the library.
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the book.
+          readOnly: true
+        title:
+          type: string
+          description: The title of the book.
+        author:
+          type: string
+          description: The author of the book.
+        isbn:
+          type: string
+          description: The ISBN of the book.
+        genre:
+          type: string
+          description: The genre of the book.
+          enum: [fiction, non-fiction, fantasy, sci-fi, mystery]
+        publishedYear:
+          type: integer
+          format: int32
+          description: The year the book was published.
+      required:
+        - title
+        - author
+        - isbn
+        - genre
+        - publishedYear
+      example:
+        id: "1"
+        title: "The Fault in Our Stars"
+        author: "John Green"
+        isbn: "9780141345659"
+        genre: "realistic fiction novel"
+        publishedYear: 2012
+
+    BookCreate:
+      type: object
+      description: Input schema for creating a book.
+      properties:
+        title:
+          type: string
+          description: The title of the book.
+        author:
+          type: string
+          description: The author of the book.
+        isbn:
+          type: string
+          description: The ISBN of the book.
+        genre:
+          type: string
+          description: The genre of the book.
+          enum: [fiction, non-fiction, fantasy, sci-fi, mystery]
+        publishedYear:
+          type: integer
+          format: int32
+          description: The year the book was published.
+      required:
+        - title
+        - author
+        - isbn
+        - genre
+        - publishedYear
+
+    BookUpdate:
+      type: object
+      description: Input schema for updating a book.
+      properties:
+        title:
+          type: string
+          description: The title of the book.
+        author:
+          type: string
+          description: The author of the book.
+        isbn:
+          type: string
+          description: The ISBN of the book.
+        genre:
+          type: string
+          description: The genre of the book.
+          enum: [fiction, non-fiction, fantasy, sci-fi, mystery]
+        publishedYear:
+          type: integer
+          format: int32
+          description: The year the book was published.
+
+    BookStats:
+      type: object
+      description: Statistics about the library collection.
+      properties:
+        totalBooks:
+          type: integer
+          description: Total number of books in the library.
+        averagePublishedYear:
+          type: number
+          description: The average publication year of all books.
+        booksByGenre:
+          type: object
+          description: A count of books grouped by genre.
+          additionalProperties:
+            type: integer
+
+    ErrorResponse:
+      type: object
+      description: Error response object.
+      properties:
+        message:
+          type: string
+          description: A human-readable error message.
+      required:
+        - message
