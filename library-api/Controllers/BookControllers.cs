@@ -8,6 +8,13 @@ namespace Library_api.Controllers;
 [Route("/")]
 public class BooksController : ControllerBase
 {
+    private readonly LibraryContext _context;
+
+    public BooksController(LibraryContext context)
+    {
+        _context = context;
+    }
+
     private static readonly HashSet<string> ValidGenres =
     [
         "fiction", "non-fiction", "fantasy", "sci-fi", "mystery"
@@ -16,7 +23,7 @@ public class BooksController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<Book>> ListBooks()
     {
-        return Ok(BookStore.Books);
+        return Ok(_context.Books.ToList());
     }
 
     [HttpPost]
@@ -29,7 +36,7 @@ public class BooksController : ControllerBase
 
         var book = new Book
         {
-            Id = BookStore.GenerateId(),
+            Id = Guid.NewGuid().ToString(),
             Title = input.Title,
             Author = input.Author,
             Isbn = input.Isbn,
@@ -37,14 +44,15 @@ public class BooksController : ControllerBase
             PublishedYear = input.PublishedYear
         };
 
-        BookStore.Books.Add(book);
+        _context.Books.Add(book);
+        _context.SaveChanges();
         return StatusCode(201, book);
     }
 
     [HttpGet("{id}")]
     public ActionResult<Book> GetBookById(string id)
     {
-        var book = BookStore.Books.FirstOrDefault(b => b.Id == id);
+        var book = _context.Books.FirstOrDefault(b => b.Id == id);
 
         if (book is null)
         {
@@ -57,7 +65,7 @@ public class BooksController : ControllerBase
     [HttpPatch("{id}")]
     public ActionResult<Book> UpdateBook(string id, [FromBody] BookUpdate input)
     {
-        var book = BookStore.Books.FirstOrDefault(b => b.Id == id);
+        var book = _context.Books.FirstOrDefault(b => b.Id == id);
 
         if (book is null)
         {
@@ -75,33 +83,35 @@ public class BooksController : ControllerBase
         if (input.Genre is not null) book.Genre = input.Genre;
         if (input.PublishedYear.HasValue) book.PublishedYear = input.PublishedYear.Value;
 
+        _context.SaveChanges();
         return Ok(book);
     }
 
     [HttpDelete("{id}")]
     public ActionResult<Book> DeleteBook(string id)
     {
-        var book = BookStore.Books.FirstOrDefault(b => b.Id == id);
+        var book = _context.Books.FirstOrDefault(b => b.Id == id);
 
         if (book is null)
         {
             return NotFound(new ErrorResponse { Message = "Book not found." });
         }
 
-        BookStore.Books.Remove(book);
+        _context.Books.Remove(book);
+        _context.SaveChanges();
         return Ok(book);
     }
 
     [HttpGet("stats")]
     public ActionResult<BookStats> GetStats()
     {
-        var totalBooks = BookStore.Books.Count;
+        var totalBooks = _context.Books.Count();
 
         var averagePublishedYear = totalBooks == 0
             ? 0
-            : BookStore.Books.Average(b => b.PublishedYear);
+            : _context.Books.Average(b => b.PublishedYear);
 
-        var booksByGenre = BookStore.Books
+        var booksByGenre = _context.Books
             .GroupBy(b => b.Genre)
             .ToDictionary(group => group.Key, group => group.Count());
 

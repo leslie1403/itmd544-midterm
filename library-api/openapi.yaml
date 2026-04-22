@@ -7,8 +7,8 @@ info:
     name: Leslie
 
 servers:
-  - url: http://localhost:3000
-    description: Local development server
+  - url: https://itmd544-mid-dbabfjgna0hnbgf8.canadacentral-01.azurewebsites.net
+    description: Production server
 
 tags:
   - name: Books

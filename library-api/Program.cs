@@ -1,7 +1,21 @@
 using System.Text.Json;
+using Library_api.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    // Fallback for local development if not set
+    connectionString = "Server=localhost;Database=LibraryDb;Trusted_Connection=True;TrustServerCertificate=True;";
+}
+
+builder.Services.AddDbContext<LibraryContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -16,6 +30,17 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+// Ensure database is created and seeded
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<LibraryContext>();
+    context.Database.EnsureCreated();
+}
+
+// Serve static files for the client app
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 // Swagger UI at /docs
 app.UseSwagger();
@@ -47,5 +72,6 @@ app.MapGet("/openapi.json", async context =>
 });
 
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();
