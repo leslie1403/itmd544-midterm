@@ -5,9 +5,11 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
-
+var connectionString = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING")
+    ?? Environment.GetEnvironmentVariable("SQLAZURECONNSTR_AZURE_SQL_CONNECTIONSTRING");
+ 
 if (string.IsNullOrEmpty(connectionString))
 {
     // Fallback for local development if not set
