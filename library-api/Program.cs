@@ -15,7 +15,14 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 builder.Services.AddDbContext<LibraryContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sqlOptions => 
+    {
+        // Enable retries for transient errors and serverless cold starts
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    }));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -34,8 +41,17 @@ var app = builder.Build();
 // Ensure database is created and seeded
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<LibraryContext>();
-    context.Database.EnsureCreated();
+    var services = scope.ServiceProvider;
+    try 
+    {
+        var context = services.GetRequiredService<LibraryContext>();
+        context.Database.EnsureCreated();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred creating the DB. The serverless DB might be waking up or the connection string is incorrect.");
+    }
 }
 
 // Serve static files for the client app
