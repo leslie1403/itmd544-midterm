@@ -61,6 +61,13 @@ using (var scope = app.Services.CreateScope())
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+// Redirect /client to index
+app.MapGet("/client", context =>
+{
+    context.Response.Redirect("/client/index.html");
+    return Task.CompletedTask;
+});
+
 // Swagger UI at /docs
 app.UseSwagger();
 app.UseSwaggerUI(options =>
