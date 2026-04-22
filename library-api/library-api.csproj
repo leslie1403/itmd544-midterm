@@ -17,14 +17,20 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
-  <Target Name="BuildAndCopyClient" BeforeTargets="Build">
+  <Target Name="BuildClient" BeforeTargets="ComputeFilesToPublish;Build">
     <Exec Command="npm install" WorkingDirectory="$(ProjectDir)..\client" />
     <Exec Command="npm run build" WorkingDirectory="$(ProjectDir)..\client" />
     <ItemGroup>
-      <ClientDistFiles Include="$(ProjectDir)..\client\dist\**\*.*" />
+      <DistFiles Include="$(ProjectDir)..\client\dist\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot\client\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
     </ItemGroup>
-    <MakeDir Directories="$(ProjectDir)wwwroot" />
-    <Copy SourceFiles="@(ClientDistFiles)" DestinationFolder="$(ProjectDir)wwwroot\%(RecursiveDir)" />
+    <!-- Also copy to local wwwroot for local debugging -->
+    <MakeDir Directories="$(ProjectDir)wwwroot\client" />
+    <Copy SourceFiles="@(DistFiles)" DestinationFolder="$(ProjectDir)wwwroot\client\%(RecursiveDir)" />
   </Target>
 
 </Project>

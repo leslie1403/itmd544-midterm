@@ -88,6 +88,5 @@ app.MapGet("/openapi.json", async context =>
 });
 
 app.MapControllers();
-app.MapFallbackToFile("index.html");
 
 app.Run();
