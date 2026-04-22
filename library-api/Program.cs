@@ -37,7 +37,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
-
+app.UseDeveloperExceptionPage();
+ 
 // Ensure database is created and seeded
 using (var scope = app.Services.CreateScope())
 {
